@@ -1,0 +1,29 @@
+.navbar {
+    background-color: #1298DC;
+    z-index: 9999;
+    border: 0;
+    color: white;
+    font-size: 12px !important;
+    line-height: 1.42857143 !important;
+    letter-spacing: 4px;
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+.jumbotron {
+  background-color: #1298DC;
+  color: white;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+ /* unvisited link */
+a {
+    color: white;
+}
+
+
+/* mouse over link */
+a:hover {
+    color: lightgray;
+}
