@@ -1,20 +1,54 @@
 import { NgModule } from '@angular/core';
-import { ButtonModule, ContextMenuModule, DialogModule,
-         FileUploadModule, InputTextareaModule, GrowlModule,
-         PanelModule, TooltipModule } from 'primeng/primeng';
+import { CheckboxModule, ButtonModule, DataTableModule, DataListModule,
+        DropdownModule, InputTextModule,
+        InputTextareaModule, OverlayPanelModule, DialogModule,
+        SpinnerModule, SidebarModule, SliderModule, SplitButtonModule, TooltipModule, 
+        PanelModule } from 'primeng/primeng';
+import {ToggleButtonModule} from 'primeng/togglebutton';
+import {TableModule} from 'primeng/table';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
-  imports: [],
+  imports: [
+    ButtonModule,
+    CheckboxModule,
+    DataListModule,
+    DataTableModule,
+    DialogModule,
+    DropdownModule,
+    FormsModule,
+    InputTextModule,
+    InputTextareaModule,
+    OverlayPanelModule,
+    PanelModule,
+    SidebarModule,
+    SpinnerModule,
+    SplitButtonModule,
+    SliderModule,
+    TableModule,
+    ToggleButtonModule,
+    TooltipModule,
+  ],
   exports: [
     ButtonModule,
-    ContextMenuModule,
+    CheckboxModule,
+    DataListModule,
+    DataTableModule,
     DialogModule,
-    FileUploadModule,
+    DropdownModule,
+    FormsModule,
+    InputTextModule,
     InputTextareaModule,
-    GrowlModule,
+    OverlayPanelModule,
     PanelModule,
-    TooltipModule
+    SidebarModule,
+    SplitButtonModule,
+    SpinnerModule,
+    SliderModule,
+    TableModule,
+    ToggleButtonModule,
+    TooltipModule,
   ],
   declarations: []
 })
