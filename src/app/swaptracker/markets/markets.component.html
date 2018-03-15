@@ -22,10 +22,10 @@
   Loading data... Might take a few seconds.
 </div>
 
-<div #chart>
+<div #chart id='marketPlot'>
 </div>
 
-<div *ngIf="tokenInfoLoaded">
+<div id='marketTable' *ngIf="tokenInfoLoaded">
   <div *ngIf="selectedMakerToken.address !== selectedTakerToken.address">      
     <b><div style='text-align:center'>{{selectedMakerToken.symbol}} <-> {{selectedTakerToken.symbol}}</div></b>
 

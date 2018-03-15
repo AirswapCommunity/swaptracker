@@ -16,41 +16,34 @@ export class MarketsComponent implements OnInit, OnDestroy {
   public AirSwapTokenAddress = '0x27054b13b1b798b345b591a4d22e6562d47ea75a';
   public AirSwapDEX = '0x8fd3121013a07c57f0d69646e86e7a4880b467b7';
   public AirSwapFilledEvent = '0xe59c5e56d85b2124f5e7f82cb5fcc6d28a4a241a9bdd732704ac9d3b6bfc98ab';
-    
   public etherscan_token = '8FWC8GZWSE8SJKY7NBSE77XER4KQ8NXK1Z';
 
   public first_block: number;
   public latest_block: number;
 
-
   public numTokens = 0;
 
   public tokenAddresses: Array<string> = [];
-  public tokenAddressesPair: Array<any> = [];
 
   public tokenProperties = {};
   public tokenPairStatistics = {};
   public combinedMarkets = {};
 
+  public dropdownTokens: Array<any>;
+  public dropdownMakerTokens: Array<any>;
+  public dropdownTakerTokens: Array<any>;
+  public selectedMakerToken: any;
+  public selectedTakerToken: any;
+
   public tokenInfoLoaded: boolean = false;
-  
+
   public timer: any;
 
   public refresh_time = 10000; // ms
   public numberOfBlock = 5838 * 14 // 14 days
-  @ViewChild('chart') el: ElementRef;
-
-  public test_tokens: any;
-
-  public dropdownTokens: Array<any>;
-  public dropdownMakerTokens: Array<any>;
-  public dropdownTakerTokens: Array<any>;
-
   public isPlotOHLC: boolean = true;
 
-  selectedMakerToken: any;
-  selectedTakerToken: any;
-
+  @ViewChild('chart') el: ElementRef;
   objectKeys = Object.keys;
 
   constructor(private http: HttpClient,
@@ -179,7 +172,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
       title: buySymbol + '/' + sellSymbol,
       xaxis: {
         autorange: true,
-        // range: [Math.min(...x_data), Math.max(...x_data)],
         rangeselector: {buttons: [
           {
             count: 1,
@@ -210,14 +202,12 @@ export class MarketsComponent implements OnInit, OnDestroy {
         rangeslider: {
            visible: false
         },
-        // rangeslider: {range: [Math.min(...x_data), Math.max(...x_data)]},
         type: 'date',
         title: 'Time'
       }, 
       yaxis: {
         autorange: true,
-        domain: [0., 0.2],
-        // showticklabels: false,
+        domain: [0., 0.2]
       },
       yaxis2: {
         type: 'linear',
@@ -225,11 +215,11 @@ export class MarketsComponent implements OnInit, OnDestroy {
         title: buySymbol + '/' + sellSymbol,
         domain: [0.25, 1]
       }
-      // yaxis: {
-      //   title: buySymbol + '/' + sellSymbol
-      // }
     }
     Plotly.newPlot( element, data, style )
+    window.onresize = () => {
+      Plotly.Plots.resize(element);
+    }
   }
 
   convertToOHLC(data) { 
@@ -384,6 +374,10 @@ export class MarketsComponent implements OnInit, OnDestroy {
     };
 
     Plotly.newPlot(element, data, layout);
+
+    window.onresize = () => {
+      Plotly.Plots.resize(element);
+    }
   }
 
   get tokens(): any {
@@ -416,7 +410,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
       ).toPromise()
     }).then(DEXtxs => {
       this.tokenAddresses = [];
-      this.tokenAddressesPair = [];
       this.tokenPairStatistics = {};
       this.dropdownTokens = [];
 
@@ -496,7 +489,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
       let idx_makerToken = this.tokenAddresses.indexOf(makerToken);
       if (idx_makerToken === -1) {
         this.tokenAddresses.push(makerToken);
-        this.tokenAddressesPair.push([takerToken]);
         this.tokenPairStatistics[makerToken] = {}
 
         this.dropdownTokens.push({label: makerProps.name,
@@ -514,7 +506,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
       let idx_takerToken = this.tokenAddresses.indexOf(takerToken);
       if (idx_takerToken === -1) {
         this.tokenAddresses.push(takerToken);
-        this.tokenAddressesPair.push([makerToken]);
         this.tokenPairStatistics[takerToken] = {}
 
         this.dropdownTokens.push({label: takerProps.name,
