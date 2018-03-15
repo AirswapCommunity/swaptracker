@@ -7,6 +7,7 @@ import { HttpClientModule } from '@angular/common/http';
 // Page Components
 import { SwaptrackerComponent } from './swaptracker.component';
 import { PageHeaderComponent } from './page-header/page-header.component';
+import { MarketsComponent } from './markets/markets.component';
 
 @NgModule({
   imports: [
@@ -16,6 +17,6 @@ import { PageHeaderComponent } from './page-header/page-header.component';
     FormsModule
   ],
   exports: [ SwaptrackerComponent ],
-  declarations: [SwaptrackerComponent, PageHeaderComponent]
+  declarations: [SwaptrackerComponent, PageHeaderComponent, MarketsComponent]
 })
 export class SwaptrackerModule { }

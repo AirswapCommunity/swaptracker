@@ -1,9 +1,11 @@
 import { NgModule }             from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import {MarketsComponent} from './swaptracker/markets/markets.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/main', pathMatch: 'full'},
+  { path: '', redirectTo: '/Markets', pathMatch: 'full'},
+  { path: 'Markets', component:MarketsComponent},
 ];
 
 @NgModule({  
