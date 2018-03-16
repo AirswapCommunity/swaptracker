@@ -13,6 +13,7 @@ import { MarketsComponent } from './markets/markets.component';
 // Pipes
 import { RelativeDatePipe } from '../shared/pipes/relative_time.pipe';
 import { ReversePipe } from '../shared/pipes/reverse.pipe';
+import { MyTradesComponent } from './my-trades/my-trades.component';
 
 @NgModule({
   imports: [
@@ -27,7 +28,8 @@ import { ReversePipe } from '../shared/pipes/reverse.pipe';
     PageHeaderComponent, 
     MarketsComponent,
     ReversePipe,
-    RelativeDatePipe],
+    RelativeDatePipe,
+    MyTradesComponent],
   providers: [ DatePipe ]
 })
 export class SwaptrackerModule { }

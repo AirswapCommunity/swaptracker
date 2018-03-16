@@ -1,5 +1,5 @@
 <div *ngIf="tokenInfoLoaded">
-  <div>
+  <div class='marketElement'>
     <p-dropdown [options]="dropdownTokens" [(ngModel)]="selectedMakerToken" [style]="{'width':'250px'}" [filter]="true" filterBy="label,value.symbol" (ngModelChange)="dropdownUpdated()">
        <ng-template let-item pTemplate="selectedItem"> 
           <img src="assets/erc20_logos/{{item.logo}}" style="vertical-align:middle" /> 
@@ -14,7 +14,7 @@
     </p-dropdown>
   </div>
   <br/>
-  <div>
+  <div class='marketElement'>
     <p-toggleButton [(ngModel)]="isPlotOHLC" onLabel="Switch to Timechart" offLabel="Switch to Candlestick" [style]="{'width':'250px'}" (onChange)="plot()"></p-toggleButton>
   </div>
 </div>
@@ -22,10 +22,10 @@
   Loading data... Might take a few seconds.
 </div>
 
-<div #chart id='marketPlot'>
+<div #chart class='marketElement'>
 </div>
 
-<div id='marketTable' *ngIf="tokenInfoLoaded">
+<div class='marketElement' *ngIf="tokenInfoLoaded">
   <div *ngIf="selectedMakerToken.address !== selectedTakerToken.address">      
     <b><div style='text-align:center'>{{selectedMakerToken.symbol}} <-> {{selectedTakerToken.symbol}}</div></b>
 
