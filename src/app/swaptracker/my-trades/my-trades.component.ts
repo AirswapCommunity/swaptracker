@@ -54,7 +54,7 @@ export class MyTradesComponent implements OnInit {
     if(this.checkAccAddress()) {
       this.responseMessage = 'Loading trades from etherscan. Please standby...';
       this.http_get(
-        'http://api.etherscan.io/api?module=account&action=txlist'+
+        'https://api.etherscan.io/api?module=account&action=txlist'+
         '&address='+this.accAddress+
         '&startblock='+this.fromBlock+
         '&endblock='+this.toBlock+
