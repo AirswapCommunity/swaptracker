@@ -1,0 +1,56 @@
+<div *ngIf="tokenInfoLoaded">
+  <div class='marketElement'>
+    <p-dropdown [options]="dropdownTokens" [(ngModel)]="selectedMakerToken" [style]="{'width':'250px'}" [filter]="true" filterBy="label,value.symbol" (ngModelChange)="dropdownUpdated()">
+       <ng-template let-item pTemplate="selectedItem"> 
+          <img src="assets/erc20_logos/{{item.logo}}" style="vertical-align:middle" /> 
+          <span style="vertical-align:middle">{{item.label}}</span>
+      </ng-template> 
+    </p-dropdown>
+    <p-dropdown [options]="dropdownTakerTokens" [(ngModel)]="selectedTakerToken" [style]="{'width':'250px'}" [filter]="true" filterBy="label,value.symbol">
+       <ng-template let-item pTemplate="selectedItem"> 
+          <img src="assets/erc20_logos/{{item.logo}}" style="vertical-align:middle" /> 
+          <span style="vertical-align:middle">{{item.label}}</span>
+      </ng-template> 
+    </p-dropdown>
+  </div>
+  <br/>
+  <div class='marketElement'>
+    <p-toggleButton [(ngModel)]="isPlotOHLC" onLabel="Switch to Timechart" offLabel="Switch to Candlestick" [style]="{'width':'250px'}" (onChange)="plot()"></p-toggleButton>
+  </div>
+</div>
+<div *ngIf="!tokenInfoLoaded">
+  Loading data... Might take a few seconds.
+</div>
+
+<div #chart class='marketElement'>
+</div>
+
+<div class='marketElement' *ngIf="tokenInfoLoaded">
+  <div *ngIf="selectedMakerToken.address !== selectedTakerToken.address">      
+    <b><div style='text-align:center'>{{selectedMakerToken.symbol}} <-> {{selectedTakerToken.symbol}}</div></b>
+
+    <p-table [value]="get_pairStatistic(selectedMakerToken.address, selectedTakerToken.address) | reverse">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Date</th>
+          <th>Maker Sells</th>
+          <th>Taker Pays</th>
+          <th>Price in {{tokenProperties[selectedTakerToken.address].symbol}} / {{tokenProperties[selectedMakerToken.address].symbol}}</th>
+          <th>Taker</th>
+          <th>Gas Cost in Finney</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-tx>
+        <tr>
+          <td pTooltip="{{tx.timestamp*1000 | date:'long'}}">{{tx.timestamp*1000  | relativeDate}}</td>
+          <td pTooltip="Bought: {{tx.buyAmount}} {{tx.buySymbol}}">{{tx.buyAmount | number:'1.0-4'}} {{tx.buySymbol}}</td>
+          <td pTooltip="Sold: {{tx.sellAmount}} {{tx.sellSymbol}}">{{tx.sellAmount | number:'1.0-4'}} {{tx.sellSymbol}}</td>
+          <td pTooltip="Price: {{tx.price}}">{{tx.price.toExponential(3)}}</td>
+          <td pTooltip="Maker: {{tx.makerAddress}}\n Taker: {{tx.takerAddress}}">{{get_addressSlice(tx.takerAddress)}} <a target="_blank" 
+              href='https://etherscan.io/address/{{tx.takerAddress}}'><i class="fa fa-external-link"></i></a></td>
+          <td pTooltip="Gas cost: {{tx.gasCost * 1000}}">{{tx.gasCost * 1000 | number:'1.4'}}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
