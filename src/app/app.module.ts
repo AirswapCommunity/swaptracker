@@ -4,7 +4,7 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { SwaptrackerModule } from './swaptracker/swaptracker.module';
+import { SwapwatchModule } from './swapwatch/swapwatch.module';
 
 @NgModule({
   declarations: [
@@ -14,7 +14,7 @@ import { SwaptrackerModule } from './swaptracker/swaptracker.module';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    SwaptrackerModule 
+    SwapwatchModule 
   ],
   providers: [],
   bootstrap: [AppComponent]
