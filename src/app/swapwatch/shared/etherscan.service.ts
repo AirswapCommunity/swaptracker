@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { AirSwapDexService } from './air-swap-dex.service';
 
 @Injectable()
-export class EtherscanService {
+export class EtherscanService {  
+  
+  public etherscan_token: string = '8FWC8GZWSE8SJKY7NBSE77XER4KQ8NXK1Z';
 
   constructor(private airswapDEX: AirSwapDexService,
               private http: HttpClient) { }

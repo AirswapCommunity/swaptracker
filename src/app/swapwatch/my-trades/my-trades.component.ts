@@ -20,8 +20,6 @@ export class MyTradesComponent implements OnInit {
   public myTransactionList: Array<any> = [];
   public loadedList: boolean = false;
 
-  public etherscan: Etherscan;
-
   public responseMessage = '';
 
   constructor(private http: HttpClient,

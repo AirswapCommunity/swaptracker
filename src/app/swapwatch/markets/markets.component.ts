@@ -9,8 +9,9 @@ import { AirSwapDexService } from '../shared/air-swap-dex.service';
 import { EtherscanService } from '../shared/etherscan.service';
 
 import { HttpClient } from '@angular/common/http';
-
+import { PlotlyHandler } from './plotlyHandler';
 import * as d3 from 'd3';
+
 
 @Component({
   selector: 'app-markets',
@@ -43,7 +44,7 @@ export class MarketsComponent implements OnInit, OnDestroy {
   public numberOfBlock = 5838 * 14 // 14 days
   public isPlotOHLC: boolean = true;
 
-
+  public plotlyHandler: PlotlyHandler;
   @ViewChild('chart') el: ElementRef;
   objectKeys = Object.keys;
 
@@ -54,6 +55,7 @@ export class MarketsComponent implements OnInit, OnDestroy {
   
   ngOnInit() {
     this.tokenProperties = this.airswapDEX.tokenProperties;
+    this.plotlyHandler = new PlotlyHandler(this.el);
     this.initDexList();
     this.init_timer();
   }
@@ -74,302 +76,25 @@ export class MarketsComponent implements OnInit, OnDestroy {
 
   plot() {
     if (this.isPlotOHLC) this.plotOHLC();
-    else this.timeChart();
+    else this.plotTimeChart();
   }
 
-  timeChart() {
-    let all_tx = this.tokenPairStatistics[this.selectedMakerToken.address][this.selectedTakerToken.address];
-    let opposite_tx = this.tokenPairStatistics[this.selectedTakerToken.address][this.selectedMakerToken.address];
+  plotTimeChart() {
+    let txList = this.tokenPairStatistics[this.selectedMakerToken.address][this.selectedTakerToken.address];
+    let txListOpposite = this.tokenPairStatistics[this.selectedTakerToken.address][this.selectedMakerToken.address];
     let buySymbol = this.tokenProperties[this.selectedMakerToken.address].symbol;
     let sellSymbol = this.tokenProperties[this.selectedTakerToken.address].symbol;
-    
-    let increasingColor = '#008837';
-    let decreasingColor = '#ca0020';
+    this.plotlyHandler.TimeChartPlot(txList, txListOpposite,
+                                     buySymbol, sellSymbol);
 
-    let x_data = [];
-    let y_data = [];
-
-    let x_volume = [];
-    let y_volume = [];
-    let y_volprice = [];
-    for (let tx of all_tx) {
-      let price = tx.price;
-      let time = new Date(tx.timestamp*1000);
-      x_data.push(time);
-      y_data.push(price);
-
-      y_volprice.push(price);
-      x_volume.push(time);
-      y_volume.push(tx.buyAmount);
-
-    }
-
-    let x_opp_data = [];
-    let y_opp_data = [];
-    for (let tx of opposite_tx) {
-      let price = 1/tx.price;
-      let time = new Date(tx.timestamp*1000);
-      x_opp_data.push(time);
-      y_opp_data.push(price);
-
-      x_volume.push(time);
-      y_volume.push(tx.sellAmount);
-      y_volprice.push(price);
-    }
-    
-    let volumeColors = [];
-    for(let i in y_volprice) {
-      if(+i > 0) {
-          if(y_volprice[+i] > y_volprice[+i-1]){
-            volumeColors.push(increasingColor);
-          } else {
-            volumeColors.push(decreasingColor)
-          }
-      } else {
-        volumeColors.push(decreasingColor)
-      }
-    }
-
-    let traceBuy = {
-      x: x_data,
-      y: y_data,
-      xaxis:'x',
-      yaxis:'y2',
-      name: 'Taker buys ' + buySymbol,
-      line: {color: increasingColor}
-    }
-    let traceSell = {
-      x: x_opp_data,
-      y: y_opp_data,
-      xaxis:'x',
-      yaxis:'y2',
-      name: 'Taker buys ' + sellSymbol,
-      line: {color: decreasingColor}
-    }
-    let volumeTrace = {
-      x: x_volume,
-      y: y_volume,                         
-      marker: {color: volumeColors},
-      type: 'bar',
-      xaxis:'x',
-      yaxis:'y',
-      name:'Volume'
-    }
-
-
-    let data = [traceBuy, traceSell, volumeTrace]
-    let element = this.el.nativeElement;
-    let style = {
-      showlegend: false, 
-      title: buySymbol + '/' + sellSymbol,
-      xaxis: {
-        autorange: true,
-        rangeselector: {buttons: [
-          {
-            count: 1,
-            label: '1h',
-            step: 'hour',
-            stepmode: 'backward'
-          },
-          {
-            count: 24,
-            label: '24h',
-            step: 'hour',
-            stepmode: 'backward'
-          },
-          {
-            count: 7,
-            label: '7d',
-            step: 'day',
-            stepmode: 'backward'
-          },
-          {
-            count: 14,
-            label: '14d',
-            step: 'day',
-            stepmode: 'backward'
-          },
-            {step: 'all'}
-        ]},
-        rangeslider: {
-           visible: false
-        },
-        type: 'date',
-        title: 'Time'
-      }, 
-      yaxis: {
-        autorange: true,
-        domain: [0., 0.2]
-      },
-      yaxis2: {
-        type: 'linear',
-        autorange: true, 
-        title: buySymbol + '/' + sellSymbol,
-        domain: [0.25, 1]
-      }
-    }
-    Plotly.newPlot( element, data, style )
-    window.onresize = () => {
-      Plotly.Plots.resize(element);
-    }
   }
-
-  convertToOHLC(data) { 
-    // from https://stackoverflow.com/questions/42064703/convert-data-to-ohlc-open-high-low-close-in-javascript
-    data.sort((a, b) => d3.ascending(a.timestamp, b.timestamp));
-    let result = [];
-    let format = d3.timeFormat("%Y-%m-%d");
-    data.forEach(d => d.timestamp = format(new Date(d.timestamp * 1000)));
-    let allDates = [...Array.from(new Set(data.map(d => d.timestamp)))];
-    allDates.forEach(d => {
-        let tempObject = {};
-        let filteredData = data.filter(e => e.timestamp === d);
-
-        tempObject['timestamp'] = d;
-        tempObject['volume'] = d3.sum(filteredData, e=> e.volume);
-        tempObject['open'] = filteredData[0].price;
-        tempObject['close'] = filteredData[filteredData.length - 1].price;
-        tempObject['high'] = d3.max(filteredData, e => e.price);
-        tempObject['low'] = d3.min(filteredData, e => e.price);
-        result.push(tempObject);
-    });
-    return result;
-  };
 
   plotOHLC(): void { 
-    let all_tx = this.tokenPairStatistics[this.selectedMakerToken.address][this.selectedTakerToken.address];
-    let opposite_tx = this.tokenPairStatistics[this.selectedTakerToken.address][this.selectedMakerToken.address];
+    let txList = this.tokenPairStatistics[this.selectedMakerToken.address][this.selectedTakerToken.address];
+    let txListOpposite = this.tokenPairStatistics[this.selectedTakerToken.address][this.selectedMakerToken.address];
     let buySymbol = this.tokenProperties[this.selectedMakerToken.address].symbol;
-    let sellSymbol = this.tokenProperties[this.selectedTakerToken.address].symbol;
-      
-    let increasingColor = '#008837';
-    let decreasingColor = '#ca0020';
-
-    let tx_data = [];
-    for (let tx of all_tx) {
-      tx_data.push({'timestamp': tx.timestamp,
-                 'price': tx.price,
-                 'volume': tx.buyAmount});
-    }
-    for (let tx of opposite_tx) {
-      tx_data.push({'timestamp': tx.timestamp,
-                 'price': 1/tx.price,
-                 'volume': tx.sellAmount});
-    }
-    let ohlc_data = this.convertToOHLC(tx_data);
-
-    let date = [];
-    let close = [];
-    let open = [];
-    let high = [];
-    let low = [];
-    let volume = [];
-    for(let data of ohlc_data) {
-      date.push(data.timestamp);
-      close.push(data.close);
-      open.push(data.open);
-      high.push(data.high);
-      low.push(data.low);
-      volume.push(data.volume);
-    }
-
-    let trace = {
-      x: date,
-      close: close,
-      open: open,
-      high: high,
-      low: low,
-      increasing: {line: {color: increasingColor},
-                   name: ''}, 
-      decreasing: {line: {color: decreasingColor},
-                   name: ''},
-      line: {color: 'rgba(31,119,180,1)'}, 
-      type: 'candlestick',
-      name: '',
-      xaxis: 'x', 
-      yaxis: 'y2'
-    }
-
-    let volumeColors = [];
-    for(let i in close) {
-      if(+i > 0) {
-          if(close[+i] > close[+i-1]){
-            volumeColors.push(increasingColor);
-          } else {
-            volumeColors.push(decreasingColor)
-          }
-      } else {
-        volumeColors.push(decreasingColor)
-      }
-    }
-    let volumeTrace = {
-      x: date,
-      y: volume,                         
-      marker: {color: volumeColors},
-      type: 'bar',
-      yaxis:'y',
-      name:''
-    }
-
-    let element = this.el.nativeElement;
-    let data = [trace, volumeTrace];
-    let layout = {
-      dragmode: 'zoom',
-      title: buySymbol + '/' + sellSymbol,
-      showlegend: false,
-      xaxis: {
-        autorange: true,
-        rangeselector: {buttons: [
-          {
-            count: 1,
-            label: '1h',
-            step: 'hour',
-            stepmode: 'backward'
-          },
-          {
-            count: 24,
-            label: '24h',
-            step: 'hour',
-            stepmode: 'backward'
-          },
-          {
-            count: 7,
-            label: '7d',
-            step: 'day',
-            stepmode: 'backward'
-          },
-          {
-            count: 14,
-            label: '14d',
-            step: 'day',
-            stepmode: 'backward'
-          },
-          {step: 'all'}
-        ]},
-        title: 'Time', 
-        type: 'date',
-        rangeslider: {
-           visible: false
-        },
-      }, 
-      yaxis: {
-        domain: [0., 0.2],
-        autorange: true
-      },
-      yaxis2: {
-        type: 'linear',
-        autorange: true, 
-        title: buySymbol + '/' + sellSymbol,
-        domain: [0.25, 1]
-      }
-
-    };
-
-    Plotly.newPlot(element, data, layout);
-
-    window.onresize = () => {
-      Plotly.Plots.resize(element);
-    }
+    let sellSymbol = this.tokenProperties[this.selectedTakerToken.address].symbol;    
+    this.plotlyHandler.OHLCPlot(txList, txListOpposite, buySymbol, sellSymbol);
   }
 
   get tokens(): any {
@@ -394,7 +119,9 @@ export class MarketsComponent implements OnInit, OnDestroy {
       this.tokenPairStatistics = {};
       this.dropdownTokens = [];
 
-      this.evalAirSwapDEX(DEXtxs.result); // go through results of API call and fill arrays
+      // this.evalAirSwapDEX(DEXtxs.result); // go through results of API call and fill arrays
+      this.airswapDEX.evalAirSwapDEXFilledEventLogs(DEXtxs.result,
+              this.tokenAddresses, this.tokenPairStatistics, this.dropdownTokens);
       this.dropdownTokens = this.dropdownTokens.sort((obj1, obj2) => {
         if(obj1.label > obj2.label) return 1;
         if(obj1.label < obj2.label) return -1;
@@ -425,7 +152,9 @@ export class MarketsComponent implements OnInit, OnDestroy {
         .then(DEXtxs => {
           if(DEXtxs.status == 1) {
             console.log('Got new data.');
-            this.evalAirSwapDEX(DEXtxs.result);
+            // this.evalAirSwapDEX(DEXtxs.result);
+            this.airswapDEX.evalAirSwapDEXFilledEventLogs(DEXtxs.result,
+              this.tokenAddresses, this.tokenPairStatistics, this.dropdownTokens);
             this.combineMarkets();
             this.updateData();
           }
@@ -434,81 +163,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
         })
       }
     })
-  }
-
-  evalAirSwapDEX(DEXtxs): void {
-    for(let txData of DEXtxs) {
-      //event Filled(address indexed makerAddress, uint makerAmount, address indexed makerToken, address takerAddress, uint takerAmount, address indexed takerToken, uint256 expiration, uint256 nonce);
-      let makerAddress = this.removeLeadingZeros0_20(txData.topics['1']);
-      let makerToken = this.removeLeadingZeros0_20(txData.topics['2']);
-      let takerToken = this.removeLeadingZeros0_20(txData.topics['3']);
-      
-      let gasUsed = parseInt(txData.gasUsed, 16);
-      let gasPrice = parseInt(txData.gasPrice, 16);
-      let gasCost = gasPrice * gasUsed / 1e18;
-      let data = txData.data;
-      let timestamp = parseInt(txData.timeStamp, 16);
-      let makerAmount = parseInt(data.slice(0,2+64*1), 16);
-      let takerAdress = this.removeLeadingZeros0_20('0x'+data.slice(2+64*1,2+64*2));
-      let takerAmount = parseInt('0x'+data.slice(2+64*2,2+64*3), 16);
-      let expiration = '0x'+data.slice(2+64*3,2+64*4);
-      let nonce = '0x'+data.slice(2+64*4,2+64*5);
-
-      let makerProps = this.tokenProperties[makerToken];
-      let takerProps = this.tokenProperties[takerToken];
-
-      let idx_makerToken = this.tokenAddresses.indexOf(makerToken);
-      if (idx_makerToken === -1) {
-        this.tokenAddresses.push(makerToken);
-        this.tokenPairStatistics[makerToken] = {}
-
-        this.dropdownTokens.push({label: makerProps.name,
-                                  value:{
-                                    id:this.dropdownTokens.length,
-                                    symbol: makerProps.symbol,
-                                    address: makerToken
-                                  },
-                                  logo: makerProps.logo});
-
-        idx_makerToken = this.numTokens;
-        this.numTokens++;
-      }
-
-      let idx_takerToken = this.tokenAddresses.indexOf(takerToken);
-      if (idx_takerToken === -1) {
-        this.tokenAddresses.push(takerToken);
-        this.tokenPairStatistics[takerToken] = {}
-
-        this.dropdownTokens.push({label: takerProps.name,
-                                  value:{
-                                    id:this.dropdownTokens.length,
-                                    symbol:  takerProps.symbol,
-                                    address: takerToken
-                                  },
-                                  logo: takerProps.logo});
-
-        idx_takerToken = this.numTokens;
-        this.numTokens++;
-      }
-
-      if(this.tokenPairStatistics[makerToken][takerToken] === undefined) {
-        this.tokenPairStatistics[makerToken][takerToken] = [];
-      }
-
-      this.tokenPairStatistics[makerToken][takerToken].push({
-        'buyAmount': makerAmount / makerProps.decimal,
-        'buySymbol': makerProps.symbol,
-        'sellAmount': takerAmount / takerProps.decimal,
-        'sellSymbol': takerProps.symbol,
-        'price': takerAmount / takerProps.decimal / (makerAmount / makerProps.decimal),
-        'gasPrice': gasPrice,
-        'gasUsed': gasUsed,
-        'gasCost': gasCost,
-        'timestamp': timestamp,
-        'makerAddress': makerAddress,
-        'takerAddress': takerAdress
-      })
-    }
   }
 
   combineMarkets(): void {
@@ -565,12 +219,6 @@ export class MarketsComponent implements OnInit, OnDestroy {
 
   get_addressSlice(address: string): string {
     return address.slice(0,8);
-  }
-
-  removeLeadingZeros0_20(data): string {
-    let cleaned_string = data.replace(/0x0*/,'0x');
-    while(cleaned_string.length < 42) cleaned_string = cleaned_string.replace('0x', '0x0')
-    return cleaned_string;
   }
 
 }

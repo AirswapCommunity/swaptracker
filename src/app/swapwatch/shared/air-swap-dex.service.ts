@@ -70,6 +70,78 @@ export class AirSwapDexService {
     return filteredTransactionList;
   }
   
+  evalAirSwapDEXFilledEventLogs(txList: Array<any>,
+                                tokenAddresses: Array<any>,
+                                tokenPairStatistics: any,
+                                dropdownTokens: Array<any>): void {
+    for(let txData of txList) {
+      //event Filled(address indexed makerAddress, uint makerAmount, address indexed makerToken, address takerAddress, uint takerAmount, address indexed takerToken, uint256 expiration, uint256 nonce);
+      let makerAddress = this.removeLeadingZeros(txData.topics['1']);
+      let makerToken = this.removeLeadingZeros(txData.topics['2']);
+      let takerToken = this.removeLeadingZeros(txData.topics['3']);
+      
+      let gasUsed = parseInt(txData.gasUsed, 16);
+      let gasPrice = parseInt(txData.gasPrice, 16);
+      let gasCost = gasPrice * gasUsed / 1e18;
+      let data = txData.data;
+      let timestamp = parseInt(txData.timeStamp, 16);
+      let makerAmount = parseInt(data.slice(0,2+64*1), 16);
+      let takerAdress = this.removeLeadingZeros('0x'+data.slice(2+64*1,2+64*2));
+      let takerAmount = parseInt('0x'+data.slice(2+64*2,2+64*3), 16);
+      let expiration = '0x'+data.slice(2+64*3,2+64*4);
+      let nonce = '0x'+data.slice(2+64*4,2+64*5);
+
+      let makerProps = this.tokenProperties[makerToken];
+      let takerProps = this.tokenProperties[takerToken];
+
+      let idx_makerToken = tokenAddresses.indexOf(makerToken);
+      if (idx_makerToken === -1) {
+        tokenAddresses.push(makerToken);
+        tokenPairStatistics[makerToken] = {}
+
+        dropdownTokens.push({label: makerProps.name,
+                                  value:{
+                                    id:dropdownTokens.length,
+                                    symbol: makerProps.symbol,
+                                    address: makerToken
+                                  },
+                                  logo: makerProps.logo});
+      }
+
+      let idx_takerToken = tokenAddresses.indexOf(takerToken);
+      if (idx_takerToken === -1) {
+        tokenAddresses.push(takerToken);
+        tokenPairStatistics[takerToken] = {}
+
+        dropdownTokens.push({label: takerProps.name,
+                                  value:{
+                                    id:dropdownTokens.length,
+                                    symbol:  takerProps.symbol,
+                                    address: takerToken
+                                  },
+                                  logo: takerProps.logo});
+      }
+
+      if(tokenPairStatistics[makerToken][takerToken] === undefined) {
+        tokenPairStatistics[makerToken][takerToken] = [];
+      }
+
+      tokenPairStatistics[makerToken][takerToken].push({
+        'buyAmount': makerAmount / makerProps.decimal,
+        'buySymbol': makerProps.symbol,
+        'sellAmount': takerAmount / takerProps.decimal,
+        'sellSymbol': takerProps.symbol,
+        'price': takerAmount / takerProps.decimal / (makerAmount / makerProps.decimal),
+        'gasPrice': gasPrice,
+        'gasUsed': gasUsed,
+        'gasCost': gasCost,
+        'timestamp': timestamp,
+        'makerAddress': makerAddress,
+        'takerAddress': takerAdress
+      })
+    }
+  }
+
   removeLeadingZeros(data): string {
     let cleaned_string = data.replace(/0x0*/,'0x');
     while(cleaned_string.length < 42) cleaned_string = cleaned_string.replace('0x', '0x0')
