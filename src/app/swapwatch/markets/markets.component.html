@@ -28,29 +28,28 @@
 <div class='marketElement' *ngIf="tokenInfoLoaded">
   <div *ngIf="selectedMakerToken.address !== selectedTakerToken.address">      
     <b><div style='text-align:center'>{{selectedMakerToken.symbol}} <-> {{selectedTakerToken.symbol}}</div></b>
-
-    <p-table [value]="get_pairStatistic(selectedMakerToken.address, selectedTakerToken.address) | reverse">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Date</th>
-          <th>Maker Sells</th>
-          <th>Taker Pays</th>
-          <th>Price in {{tokenProperties[selectedTakerToken.address].symbol}} / {{tokenProperties[selectedMakerToken.address].symbol}}</th>
-          <th>Taker</th>
-          <th>Gas Cost in Finney</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-tx>
-        <tr>
-          <td pTooltip="{{tx.timestamp*1000 | date:'long'}}">{{tx.timestamp*1000  | relativeDate}}</td>
-          <td pTooltip="Bought: {{tx.buyAmount}} {{tx.buySymbol}}">{{tx.buyAmount | number:'1.0-4'}} {{tx.buySymbol}}</td>
-          <td pTooltip="Sold: {{tx.sellAmount}} {{tx.sellSymbol}}">{{tx.sellAmount | number:'1.0-4'}} {{tx.sellSymbol}}</td>
-          <td pTooltip="Price: {{tx.price}}">{{tx.price.toExponential(3)}}</td>
-          <td pTooltip="Maker: {{tx.makerAddress}}\n Taker: {{tx.takerAddress}}">{{get_addressSlice(tx.takerAddress)}} <a target="_blank" 
+    <div class='table-responsive'>
+      <table class='table table-hover'>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Maker Sells</th>
+            <th>Taker Pays</th>
+            <th>Price in {{tokenProperties[selectedTakerToken.address].symbol}} / {{tokenProperties[selectedMakerToken.address].symbol}}</th>
+            <th>Taker</th>
+            <th>Gas Cost in Finney</th>
+          </tr>
+        </thead>
+        <tr *ngFor="let tx of get_pairStatistic(selectedMakerToken.address, selectedTakerToken.address) | reverse">
+          <td>{{tx.timestamp*1000  | relativeDate}}</td>
+          <td>{{tx.buyAmount | number:'1.0-4'}} {{tx.buySymbol}}</td>
+          <td>{{tx.sellAmount | number:'1.0-4'}} {{tx.sellSymbol}}</td>
+          <td>{{tx.price.toExponential(3)}}</td>
+          <td>{{get_addressSlice(tx.takerAddress)}} <a target="_blank" 
               href='https://etherscan.io/address/{{tx.takerAddress}}'><i class="fa fa-external-link"></i></a></td>
-          <td pTooltip="Gas cost: {{tx.gasCost * 1000}}">{{tx.gasCost * 1000 | number:'1.4'}}</td>
+          <td>{{tx.gasCost * 1000 | number:'1.4'}}</td>
         </tr>
-      </ng-template>
-    </p-table>
+      </table>
+    </div>
   </div>
 </div>
